@@ -18,6 +18,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/debug.c \
 	$(LOCAL_DIR)/gpio.c \
 	$(LOCAL_DIR)/init.c \
+	$(LOCAL_DIR)/pm.c \
 	$(LOCAL_DIR)/uart.c \
 	$(LOCAL_DIR)/vectab.c
 
@@ -28,6 +29,9 @@ MODULE_SRCS += \
 #
 LINKER_SCRIPT += \
 	$(BUILDDIR)/system-twosegment.ld
+
+GLOBAL_DEFINES += \
+	PLATFORM_SUPPORTS_PANIC_SHELL=1
 
 MODULE_DEPS += \
 	platform/ch579/StdPeriphDriver \
