@@ -26,8 +26,9 @@ void platform_halt(platform_halt_action suggested_action,
     switch (suggested_action) {
         default:
         case HALT_ACTION_SHUTDOWN:
-            while(1)
-                LowPower_Shutdown(NULL);
+            LowPower_Shutdown(NULL);
+            while(1);
+            break;
         case HALT_ACTION_HALT:
             dprintf(ALWAYS, "HALT: spinning forever... (reason = %d)\n", reason);
             arch_disable_ints();
@@ -36,8 +37,8 @@ void platform_halt(platform_halt_action suggested_action,
             break;
         case HALT_ACTION_REBOOT:
             arch_disable_ints();
-            while(1)
-                NVIC_SystemReset();
+            SYS_ResetExecute();
+            while(1);
             break;
     }
 
