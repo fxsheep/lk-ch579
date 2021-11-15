@@ -1,6 +1,8 @@
 #include <platform.h>
 #include <arch/arm/cm.h>
 #include <platform/chipflash.h>
+#include <dev/gpio.h>
+#include <platform/gpio.h>
 #include <target/debugconfig.h>
 #include <CH57x_common.h>
 
@@ -11,9 +13,9 @@ void platform_early_init(void) {
     // start the systick timer
     arm_cm_systick_init(32000000);
 
-    GPIOA_SetBits(GPIO_Pin_9);
-    GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
-    GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
+    gpio_set(GPIO(GPIO_PORT_A, 9), 1);
+    gpio_config(GPIO(GPIO_PORT_A, 8), GPIO_INPUT | GPIO_PULLUP);
+    gpio_config(GPIO(GPIO_PORT_A, 9), GPIO_OUTPUT);
     UART1_DefInit();
 }
 
