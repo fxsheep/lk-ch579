@@ -16,6 +16,7 @@ GLOBAL_DEFINES += \
 
 MODULE_SRCS += \
 	$(LOCAL_DIR)/debug.c \
+	$(LOCAL_DIR)/chipflash.c \
 	$(LOCAL_DIR)/gpio.c \
 	$(LOCAL_DIR)/init.c \
 	$(LOCAL_DIR)/pm.c \
@@ -36,6 +37,7 @@ GLOBAL_DEFINES += \
 MODULE_DEPS += \
 	platform/ch579/StdPeriphDriver \
 	arch/arm/arm-m/systick \
+	lib/bio \
 	lib/cbuf
 
 include make/module.mk

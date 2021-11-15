@@ -1,5 +1,6 @@
 #include <platform.h>
 #include <arch/arm/cm.h>
+#include <platform/chipflash.h>
 #include <target/debugconfig.h>
 #include <CH57x_common.h>
 
@@ -17,4 +18,5 @@ void platform_early_init(void) {
 }
 
 void platform_init(void) {
+    ch579_init_chipflash();
 }
