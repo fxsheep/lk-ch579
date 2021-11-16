@@ -1339,7 +1339,7 @@ extern "C" {
 #define R8_ETH_MIREGADR         (*((PUINT8V)(0x40009024))) /* MII µØÖ·¼Ä´æÆ÷ */
 #define  RB_ETH_MIREGADR_MASK   0x1F                  /* RW PHY ¼Ä´æÆ÷µØÖ·ÑÚÂë */    
 #define R8_ETH_MISTAT           (*((PUINT8V)(0x40009025))) /* MII ×´Ì¬¼Ä´æÆ÷ */
-//#define  RB_ETH_MIREGADR_MIIWR  0x20                  /* WO MII Ð´ÃüÁî */
+#define  RB_ETH_MIREGADR_MIIWR  0x20                  /* WO MII Ð´ÃüÁî */
 #define R16_ETH_MIWR            (*((PUINT16V)(0x40009026))) /* WO MII Ð´Êý¾Ý¼Ä´æÆ÷ */
 #define R32_ETH_MAADRL          (*((PUINT32V)(0x40009028))) /* RW MAC 1-4 */
 #define R16_ETH_MAADRH          (*((PUINT16V)(0x4000902C))) /* RW MAC 5-6 */

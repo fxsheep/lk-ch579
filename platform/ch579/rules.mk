@@ -17,6 +17,7 @@ GLOBAL_DEFINES += \
 MODULE_SRCS += \
 	$(LOCAL_DIR)/debug.c \
 	$(LOCAL_DIR)/chipflash.c \
+	$(LOCAL_DIR)/eth.c \
 	$(LOCAL_DIR)/gpio.c \
 	$(LOCAL_DIR)/init.c \
 	$(LOCAL_DIR)/pm.c \
