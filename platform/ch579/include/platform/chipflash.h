@@ -7,4 +7,4 @@
 #define INFO_FLASH_BASE 0x40000
 #define INFO_FLASH_SIZE 0x400
 
-void ch579_init_chipflash(void);
+void ch579_chipflash_init(void);

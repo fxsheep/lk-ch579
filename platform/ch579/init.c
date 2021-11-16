@@ -20,5 +20,5 @@ void platform_early_init(void) {
 }
 
 void platform_init(void) {
-    ch579_init_chipflash();
+    ch579_chipflash_init();
 }

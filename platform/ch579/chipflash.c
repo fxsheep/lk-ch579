@@ -165,7 +165,7 @@ static ssize_t ch579_dataflash_bdev_erase(struct bdev *bdev, off_t offset, size_
     return erased_bytes;
 }
 
-void ch579_init_chipflash(void) {
+void ch579_chipflash_init(void) {
     static bdev_t cf_dev, df_dev, if_dev;
 
     bio_initialize_bdev(&cf_dev, "codeflash", 512, CODE_FLASH_SIZE / 512, 1, cf_geometry,
