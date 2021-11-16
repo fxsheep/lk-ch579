@@ -112,7 +112,7 @@ void gpio_set(unsigned nr, unsigned on) {
             R32_PA_CLR |= (1 << nr - 1);
         } else {
             nr -= 16;
-            R32_PA_CLR |= (1 << nr - 1);
+            R32_PB_CLR |= (1 << nr - 1);
         }
     }
 }
