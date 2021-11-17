@@ -98,8 +98,8 @@ low_level_init(struct netif *netif) {
     /* maximum transfer unit */
     netif->mtu = R16_ETH_MAMXFL;
 
-    /* broadcast capability */
-    netif->flags = NETIF_FLAG_BROADCAST;
+    /* Interface characteristics */
+    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;
 }
 
 /*
@@ -422,10 +422,12 @@ void ETH_IRQHandler(void) {
             R8_ETH_ECON1 |= RB_ETH_ECON1_RXEN;
             gpio_set(ETH_CONN_LED, 0);
             gpio_set(ETH_DATA_LED, 0);
+            netif_set_link_up(ch579_netif);
         } else {
             R8_ETH_ECON1 &= ~RB_ETH_ECON1_RXEN;
             gpio_set(ETH_CONN_LED, 1);
             gpio_set(ETH_DATA_LED, 1);
+            netif_set_link_down(ch579_netif);
         }
         R8_ETH_EIR = RB_ETH_EIR_LINKIF;
     }
