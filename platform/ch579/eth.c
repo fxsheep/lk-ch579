@@ -22,7 +22,8 @@
 struct netif *ch579_netif;
 
 /* DMA buffers for TX and RX */
-uint8_t tx_dma_buf[1600], rx_dma_buf[1600];
+//Make sure it's 4-bytes aligned
+uint8_t __attribute__((aligned(4))) tx_dma_buf[1600], rx_dma_buf[1600];
 
 /* MAC address */
 uint8_t macaddr[6];
