@@ -47,7 +47,7 @@ typedef intptr_t mem_ptr_t;
 
 #define LWIP_CHKSUM_ALGORITHM 2
 
-#define LWIP_PLATFORM_DIAG(x) do {} while (0)
+#define LWIP_PLATFORM_DIAG(x) do {printf x ;} while (0)
 #define LWIP_PLATFORM_ASSERT(x) do {} while (0)
 
 #define PACK_STRUCT_STRUCT __PACKED
