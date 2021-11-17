@@ -5,6 +5,8 @@
 #include <dev/gpio.h>
 #include <target/gpiomap.h>
 
+static bool tx_rx_error_seen;
+
 void ch579_eth_on(void) {
     RWA_UNLOCK;
     R8_SLP_CLK_OFF1 &= ~RB_SLP_CLK_ETH;
@@ -29,6 +31,14 @@ uint16_t ch579_eth_read_phy_reg(uint8_t addr) {
 void ch579_eth_write_phy_reg(uint8_t addr, uint16_t value) {
     R16_ETH_MIWR = value;
     R8_ETH_MIREGADR = addr & RB_ETH_MIREGADR_MASK;
+}
+
+bool ch579_eth_is_error_seen(bool clear) {
+    bool ret = tx_rx_error_seen;
+    if (clear){
+        tx_rx_error_seen = false;
+    }
+    return ret;
 }
 
 void ch579_eth_init(void) {
@@ -92,6 +102,7 @@ void ETH_IRQHandler(void) {
     }
     if (eir << 30) {
         //Send/receive error seen
+        tx_rx_error_seen = true;
         R8_ETH_EIR = RB_ETH_EIR_TXERIF | RB_ETH_EIR_RXERIF;
     }
     arm_cm_irq_exit(resched);
