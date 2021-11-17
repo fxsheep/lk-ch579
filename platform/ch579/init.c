@@ -8,7 +8,6 @@
 #include <CH57x_common.h>
 
 extern void* vectab;
-uint8_t macaddr[6];
 
 void platform_early_init(void) {
     /* SYS_PLL must be enabled to get ETH working */
@@ -27,7 +26,5 @@ void platform_early_init(void) {
 
 void platform_init(void) {
     ch579_chipflash_init();
-
-    ch579_infoflash_read_macaddr(macaddr);
-    ch579_eth_init(CH579_DEFAULT_MAXMFL, macaddr);
+    ch579_eth_init();
 }
