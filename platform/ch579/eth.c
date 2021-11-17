@@ -9,6 +9,7 @@
 #include <target/gpiomap.h>
 #include <CH57x_common.h>
 
+#include "lwip/dhcp.h"
 #include "lwip/opt.h"
 #include "lwip/def.h"
 #include "lwip/mem.h"
@@ -394,6 +395,7 @@ void ch579_eth_init(void) {
 
     ethernet_init();
 
+    dhcp_start(ch579_netif);
 //    rx_thread = thread_create("ch579_eth_rx", ch579_eth_rx_thread, NULL, HIGH_PRIORITY, DEFAULT_STACK_SIZE);
 //    thread_resume(rx_thread);
 }
