@@ -11,3 +11,4 @@
 #define INFO_FLASH_NAME "infoflash"
 
 void ch579_chipflash_init(void);
+int ch579_infoflash_read_macaddr(uint8_t macaddr[]);

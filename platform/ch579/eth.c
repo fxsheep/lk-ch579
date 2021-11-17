@@ -41,7 +41,7 @@ bool ch579_eth_is_error_seen(bool clear) {
     return ret;
 }
 
-void ch579_eth_init(void) {
+void ch579_eth_init(uint16_t maxmfl, uint8_t macaddr[]) {
     /* Init Ethernet LEDs*/
     gpio_config(ETH_CONN_LED, GPIO_OUTPUT);
     gpio_config(ETH_DATA_LED, GPIO_OUTPUT);
@@ -67,7 +67,14 @@ void ch579_eth_init(void) {
     R8_ETH_MACON2 &= ~RB_ETH_MACON2_HFRMEN;
     R8_ETH_MACON2 |= RB_ETH_MACON2_FULDPX;
 
-    //TODO: R16_ETH_MAMXFL, macaddr, DMA buffer handling
+    /* Configure MTU */
+    R16_ETH_MAMXFL = maxmfl;
+
+    /* Configure MAC address */
+    R16_ETH_MAADRH = macaddr[0] << 8 | macaddr[1];
+    R32_ETH_MAADRL = macaddr[2] << 24 | macaddr[3] << 16 | macaddr[4] << 8 | macaddr[5];
+
+    //TODO: DMA buffer handling
 
     NVIC_EnableIRQ(ETH_IRQn);
 }

@@ -39,6 +39,7 @@ MODULE_DEPS += \
 	platform/ch579/StdPeriphDriver \
 	arch/arm/arm-m/systick \
 	lib/bio \
+	external/lib/lwip \
 	lib/cbuf
 
 include make/module.mk

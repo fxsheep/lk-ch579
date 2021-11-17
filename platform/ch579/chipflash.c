@@ -165,6 +165,20 @@ static ssize_t ch579_dataflash_bdev_erase(struct bdev *bdev, off_t offset, size_
     return erased_bytes;
 }
 
+/* MAC address in big endian, read from infoflash*/
+int ch579_infoflash_read_macaddr(uint8_t macaddr[]) {
+    int i;
+
+    for (i = 5; i >= 0; i--) {
+        macaddr[5 - i] = *(uint8_t *)(ROM_MAC_ADDR + i);
+    }
+    if (macaddr[0] != 0x84 || macaddr[1] != 0xC2 || macaddr[2] != 0xE4) {
+        /* Not a valid MAC address of WCH */
+        return -1;
+    }
+    return 0;
+}
+
 void ch579_chipflash_init(void) {
     static bdev_t cf_dev, df_dev, if_dev;
 
