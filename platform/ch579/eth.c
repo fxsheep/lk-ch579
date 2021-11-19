@@ -29,7 +29,7 @@ uint8_t __attribute__((aligned(4))) tx_dma_buf[1600], rx_dma_buf[1600];
 /* MAC address */
 uint8_t macaddr[6];
 
-static event_t rx_arrived_event = EVENT_INITIAL_VALUE(rx_arrived_event, false, 0);
+static event_t rx_arrived_event = EVENT_INITIAL_VALUE(rx_arrived_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 static event_t led_blink_event = EVENT_INITIAL_VALUE(led_blink_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
