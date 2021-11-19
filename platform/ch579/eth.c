@@ -30,7 +30,7 @@ uint8_t __attribute__((aligned(4))) tx_dma_buf[1600], rx_dma_buf[1600];
 uint8_t macaddr[6];
 
 static event_t rx_arrived_event = EVENT_INITIAL_VALUE(rx_arrived_event, false, 0);
-
+static event_t led_blink_event = EVENT_INITIAL_VALUE(led_blink_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
 #define IFNAME1 'n'
@@ -44,6 +44,19 @@ struct ethernetif {
 static void  ethernetif_input(struct netif *netif);
 
 static bool tx_rx_error_seen;
+
+static int ch579_eth_led_blink_thread(void *arg) {
+    while(1) {
+        event_wait(&led_blink_event);
+        /* Only blink when physically connected */
+        if (R8_ETH_ECON1 & RB_ETH_ECON1_RXEN) {
+            gpio_set(ETH_DATA_LED, 1); //Off
+            thread_sleep(50);
+            gpio_set(ETH_DATA_LED, 0); //On
+        }
+    }
+    return 0;
+}
 
 void ch579_eth_on(void) {
     RWA_UNLOCK;
@@ -388,10 +401,13 @@ static void ch579_eth_hwinit(uint16_t maxmfl, uint8_t macaddr[]) {
 }
 
 void ch579_eth_init(void) {
-    thread_t *rx_thread;
+    thread_t *rx_thread, *led_blink_thread;
 
     ch579_infoflash_read_macaddr(macaddr);
     ch579_eth_hwinit(CH579_DEFAULT_MAXMFL, macaddr);
+
+    led_blink_thread = thread_create("ch579_eth_led_blink", ch579_eth_led_blink_thread, NULL, DEFAULT_PRIORITY, DEFAULT_STACK_SIZE);
+    thread_resume(led_blink_thread);
 
     ethernet_init();
 
@@ -407,6 +423,7 @@ void ETH_IRQHandler(void) {
     eir = R8_ETH_EIR;
     if (eir & RB_ETH_EIR_RXIF) {
         //Receive complete
+        event_signal(&led_blink_event, false);
         ethernetif_input(ch579_netif);
 //        event_signal(&rx_arrived_event, true);
 //        resched = true;
@@ -414,6 +431,7 @@ void ETH_IRQHandler(void) {
     }
     if (eir & RB_ETH_EIR_TXIF) {
         //Send complete
+        event_signal(&led_blink_event, false);
         R8_ETH_EIR = RB_ETH_EIR_TXIF;
     }
     if (eir & RB_ETH_EIR_LINKIF) {
