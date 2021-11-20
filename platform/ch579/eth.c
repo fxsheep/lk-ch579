@@ -238,38 +238,24 @@ low_level_input(struct netif *netif) {
 static void
 ethernetif_input(struct netif *netif)
 {
-  struct eth_hdr *ethhdr;
-  struct pbuf *p;
+    struct eth_hdr *ethhdr;
+    struct pbuf *p;
 
-  /* move received packet into a new pbuf */
-  p = low_level_input(netif);
-  /* no packet could be read, silently ignore this */
-  if (p == NULL) return;
-  /* points to packet payload, which starts with an Ethernet header */
-  ethhdr = p->payload;
+    /* move received packet into a new pbuf */
+    p = low_level_input(netif);
+    /* no packet could be read, silently ignore this */
+    if (p == NULL) return;
+    /* points to packet payload, which starts with an Ethernet header */
+    ethhdr = p->payload;
 
-  switch (htons(ethhdr->type)) {
-  /* IP or ARP packet? */
-  case ETHTYPE_IP:
-  case ETHTYPE_ARP:
-#if PPPOE_SUPPORT
-  /* PPPoE packet? */
-  case ETHTYPE_PPPOEDISC:
-  case ETHTYPE_PPPOE:
-#endif /* PPPOE_SUPPORT */
+
     /* full packet send to tcpip_thread to process */
     if (netif->input(p, netif)!=ERR_OK)
-     { LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
-       pbuf_free(p);
-       p = NULL;
-     }
-    break;
-
-  default:
-    pbuf_free(p);
-    p = NULL;
-    break;
-  }
+    {
+        LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
+        pbuf_free(p);
+        p = NULL;
+    }
 }
 
 /**
@@ -287,44 +273,44 @@ ethernetif_input(struct netif *netif)
 err_t
 ethernetif_init(struct netif *netif)
 {
-  struct ethernetif *ethernetif;
+    struct ethernetif *ethernetif;
 
-  LWIP_ASSERT("netif != NULL", (netif != NULL));
+    LWIP_ASSERT("netif != NULL", (netif != NULL));
     
-  ethernetif = mem_malloc(sizeof(struct ethernetif));
-  if (ethernetif == NULL) {
-    LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_init: out of memory\n"));
-    return ERR_MEM;
-  }
+    ethernetif = mem_malloc(sizeof(struct ethernetif));
+    if (ethernetif == NULL) {
+        LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_init: out of memory\n"));
+        return ERR_MEM;
+    }
 
 #if LWIP_NETIF_HOSTNAME
-  /* Initialize interface hostname */
-  netif->hostname = HOSTNAME;
+    /* Initialize interface hostname */
+    netif->hostname = HOSTNAME;
 #endif /* LWIP_NETIF_HOSTNAME */
 
-  /*
-   * Initialize the snmp variables and counters inside the struct netif.
-   * The last argument should be replaced with your link speed, in units
-   * of bits per second.
-   */
-  NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, LINK_SPEED_OF_YOUR_NETIF_IN_BPS);
+    /*
+    * Initialize the snmp variables and counters inside the struct netif.
+    * The last argument should be replaced with your link speed, in units
+    * of bits per second.
+    */
+    NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, LINK_SPEED_OF_YOUR_NETIF_IN_BPS);
 
-  netif->state = ethernetif;
-  netif->name[0] = IFNAME0;
-  netif->name[1] = IFNAME1;
-  /* We directly use etharp_output() here to save a function call.
-   * You can instead declare your own function an call etharp_output()
-   * from it if you have to do some checks before sending (e.g. if link
-   * is available...) */
-  netif->output = etharp_output;
-  netif->linkoutput = low_level_output;
+    netif->state = ethernetif;
+    netif->name[0] = IFNAME0;
+    netif->name[1] = IFNAME1;
+    /* We directly use etharp_output() here to save a function call.
+    * You can instead declare your own function an call etharp_output()
+    * from it if you have to do some checks before sending (e.g. if link
+    * is available...) */
+    netif->output = etharp_output;
+    netif->linkoutput = low_level_output;
   
-  ethernetif->ethaddr = (struct eth_addr *)&(netif->hwaddr[0]);
+    ethernetif->ethaddr = (struct eth_addr *)&(netif->hwaddr[0]);
   
-  /* initialize the hardware */
-  low_level_init(netif);
+    /* initialize the hardware */
+    low_level_init(netif);
 
-  return ERR_OK;
+    return ERR_OK;
 }
 
 status_t ethernet_init(void) {
