@@ -54,6 +54,7 @@ static int ch579_eth_led_blink_thread(void *arg) {
             gpio_set(ETH_DATA_LED, 1); //Off
             thread_sleep(50);
             gpio_set(ETH_DATA_LED, 0); //On
+            thread_sleep(50);
         }
     }
     return 0;
