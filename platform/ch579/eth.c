@@ -29,7 +29,9 @@ uint8_t __attribute__((aligned(4))) tx_dma_buf[1600], rx_dma_buf[1600];
 /* MAC address */
 uint8_t mac_address[6];
 
+static event_t rx_ready_event = EVENT_INITIAL_VALUE(rx_ready_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 static event_t led_blink_event = EVENT_INITIAL_VALUE(led_blink_event, false, EVENT_FLAG_AUTOUNSIGNAL);
+
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
 #define IFNAME1 'n'
@@ -336,6 +338,14 @@ status_t ethernet_init(void) {
     return NO_ERROR;
 }
 
+static int ch579_eth_rx_thread(void *arg) {
+    while(1) {
+        event_wait(&rx_ready_event);
+        ethernetif_input(ch579_netif);
+    }
+    return 0;
+}
+
 static void ch579_eth_hwinit(uint16_t maxmfl, uint8_t macaddr[]) {
     /* Init Ethernet LEDs*/
     gpio_config(ETH_CONN_LED, GPIO_OUTPUT);
@@ -375,13 +385,16 @@ static void ch579_eth_hwinit(uint16_t maxmfl, uint8_t macaddr[]) {
 }
 
 void ch579_eth_init(void) {
-    thread_t *led_blink_thread;
+    thread_t *led_blink_thread, *rx_thread;
 
     ch579_infoflash_read_macaddr(mac_address);
     ch579_eth_hwinit(CH579_DEFAULT_MAXMFL, mac_address);
 
     led_blink_thread = thread_create("ch579_eth_led_blink", ch579_eth_led_blink_thread, NULL, DEFAULT_PRIORITY, DEFAULT_STACK_SIZE);
     thread_resume(led_blink_thread);
+
+    rx_thread = thread_create("ch579_eth_rx", ch579_eth_rx_thread, NULL, HIGH_PRIORITY, DEFAULT_STACK_SIZE);
+    thread_resume(rx_thread);
 
     ethernet_init();
 
@@ -396,13 +409,15 @@ void ETH_IRQHandler(void) {
     if (eir & RB_ETH_EIR_RXIF) {
         //Receive complete
         event_signal(&led_blink_event, false);
-        ethernetif_input(ch579_netif);
+        event_signal(&rx_ready_event, false);        
         R8_ETH_EIR = RB_ETH_EIR_RXIF;
+        resched = true;
     }
     if (eir & RB_ETH_EIR_TXIF) {
         //Send complete
         event_signal(&led_blink_event, false);
         R8_ETH_EIR = RB_ETH_EIR_TXIF;
+        resched = true;
     }
     if (eir & RB_ETH_EIR_LINKIF) {
         //Link has changed
