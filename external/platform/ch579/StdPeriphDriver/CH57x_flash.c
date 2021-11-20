@@ -96,8 +96,9 @@ UINT8 FlashBlockErase(UINT32 addr)
 	 &&(op_step == 0x66))
 	{
 		R32_FLASH_ADDR = addr;
-        if( addr < DATA_FLASH_ADDR  )    R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE;	// Codefalsh区
-        else       R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_DATA_WE;         // datafalsh区
+		if( addr < DATA_FLASH_ADDR  )    R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE;		     // Codefalsh区
+		else if( addr < BOOT_LOAD_CFG  )	R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_DATA_WE;         // datafalsh区
+        else       R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE|RB_ROM_DATA_WE;         			 // InfoFlash area
 	}
 	
 	op_step += 0x11;
@@ -106,7 +107,8 @@ UINT8 FlashBlockErase(UINT32 addr)
 	 &&(codeflash_access_flag2 == CODEFLASH_SAFE_FLAG2)
 	 &&(op_step == 0x77))
 	{
-		R8_FLASH_COMMAND = ROM_CMD_ERASE;
+		if( addr < BOOT_LOAD_CFG  )    R8_FLASH_COMMAND = ROM_CMD_ERASE;
+		else       R8_FLASH_COMMAND = INFO_CMD_ERASE;
 		status = (unsigned char)(R16_FLASH_STATUS & 0xff);
 	}
 	
@@ -170,8 +172,9 @@ UINT8 FlashWriteDW(UINT32 addr, UINT32 dat)
 	 &&(codeflash_access_flag2 == CODEFLASH_SAFE_FLAG2)
 	 &&(op_step == 0x66))
 	{
-		if( addr < DATA_FLASH_ADDR  )    R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE;	// Codefalsh区
-        else       R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_DATA_WE;         // datafalsh区
+		if( addr < DATA_FLASH_ADDR  )    R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE;		     // Codefalsh区
+		else if( addr < BOOT_LOAD_CFG  )	R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_DATA_WE;         // datafalsh区
+        else       R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE|RB_ROM_DATA_WE;         			 // InfoFlash area
 	}
 	
     op_step += 0x11;
@@ -182,7 +185,8 @@ UINT8 FlashWriteDW(UINT32 addr, UINT32 dat)
 	{
 		R32_FLASH_ADDR = add;
 		R32_FLASH_DATA = val;		
-		R8_FLASH_COMMAND = ROM_CMD_PROG;
+		if( addr < BOOT_LOAD_CFG  )    R8_FLASH_COMMAND = ROM_CMD_PROG;
+		else       R8_FLASH_COMMAND = INFO_CMD_PROG;
 		status = (unsigned char)(R16_FLASH_STATUS & 0xff);
 	}
 	
@@ -248,8 +252,9 @@ UINT8 FlashWriteBuf(UINT32 addr, PUINT32 pdat, UINT16 len)
 	 &&(codeflash_access_flag2 == CODEFLASH_SAFE_FLAG2)
 	 &&(op_step == 0x66))
 	{
-		if( addr < DATA_FLASH_ADDR  )    R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE;	// Codefalsh区
-        else       R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_DATA_WE;         // datafalsh区
+		if( addr < DATA_FLASH_ADDR  )    R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE;		     // Codefalsh区
+		else if( addr < BOOT_LOAD_CFG  )	R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_DATA_WE;         // datafalsh区
+        else       R8_FLASH_PROTECT = RB_ROM_WE_MUST_10|RB_ROM_CODE_WE|RB_ROM_DATA_WE;         			 // InfoFlash area
 	}
 	
     op_step += 0x11;
@@ -262,7 +267,8 @@ UINT8 FlashWriteBuf(UINT32 addr, PUINT32 pdat, UINT16 len)
 		{
 			R32_FLASH_ADDR = add;
 			R32_FLASH_DATA = *p32++;		
-			R8_FLASH_COMMAND = ROM_CMD_PROG;		
+			if( addr < BOOT_LOAD_CFG  )    R8_FLASH_COMMAND = ROM_CMD_PROG;
+			else       R8_FLASH_COMMAND = INFO_CMD_PROG;		
 			add += 4;
 			//status = R8_FLASH_STATUS;
 			status = (unsigned char)(R16_FLASH_STATUS & 0xff);

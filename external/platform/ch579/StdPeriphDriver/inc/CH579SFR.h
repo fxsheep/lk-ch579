@@ -458,6 +458,8 @@ extern "C" {
 #define R8_FLASH_COMMAND    (*((PUINT8V)0x40001808))  // WO, Flash ROM operation command
 #define ROM_CMD_PROG        0x9A                      // WO: Flash ROM word program operation command, for changing some ROM bit of a word from 1 to 0
 #define ROM_CMD_ERASE       0xA6                      // WO: Flash ROM sector erase operation command, for changing all ROM bit of 512Bytes from 0 to 1
+#define INFO_CMD_PROG       0x99                      // WO: InfoFlash word program operation command, for changing some ROM bit of a word from 1 to 0
+#define INFO_CMD_ERASE      0xA5                      // WO: InfoFlash sector erase operation command, for changing all ROM bit of 512Bytes from 0 to 1
 #define R8_FLASH_PROTECT    (*((PUINT8V)0x40001809))  // RW, Flash ROM protect control
 #define  RB_ROM_DATA_WE     0x04                      // RW, enable Flash ROM data area being erase/write: 0=writing protect, 1=enable program and erase
 #define  RB_ROM_CODE_WE     0x08                      // RW, enable Flash ROM code area being erase/write: 0=writing protect, 1=enable program and erase

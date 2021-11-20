@@ -9,7 +9,7 @@
 
 static bio_erase_geometry_info_t cf_geometry[1] = {0, CODE_FLASH_SIZE, 512, 9};
 static bio_erase_geometry_info_t df_geometry[1] = {0, DATA_FLASH_SIZE, 512, 9};
-//static bio_erase_geometry_info_t if_geometry[1] = {0, INFO_FLASH_SIZE, 512, 9};
+static bio_erase_geometry_info_t if_geometry[1] = {0, INFO_FLASH_SIZE, 512, 9};
 
 static ssize_t ch579_codeflash_bdev_read(struct bdev *bdev, void *buf, off_t offset, size_t len) {
     len = bio_trim_range(bdev, offset, len);
@@ -129,6 +129,20 @@ static ssize_t ch579_dataflash_bdev_write_block(struct bdev *bdev, const void *b
     return written_bytes;
 }
 
+static ssize_t ch579_infoflash_bdev_write_block(struct bdev *bdev, const void *buf, bnum_t block, uint count) {
+    ssize_t written_bytes;
+    const uint32_t *buf32 = (const uint32_t *)buf;
+
+    count = bio_trim_block_range(bdev, block, count);
+    written_bytes = count * bdev->block_size;
+    if (count == 0)
+        return 0;
+    if (FlashWriteBuf(block * bdev->block_size + INFO_FLASH_BASE, buf32, written_bytes)) {
+        written_bytes = ERR_IO;
+    }
+    return written_bytes;
+}
+
 static ssize_t ch579_codeflash_bdev_erase(struct bdev *bdev, off_t offset, size_t len) {
     ssize_t erased_bytes = 0;
 
@@ -155,6 +169,24 @@ static ssize_t ch579_dataflash_bdev_erase(struct bdev *bdev, off_t offset, size_
         return 0;
     while (len >= bdev->block_size){
         if (FlashBlockErase(offset + DATA_FLASH_BASE)) {
+            erased_bytes = ERR_IO;
+            break;
+        }
+        offset += bdev->block_size;
+        len -= bdev->block_size;
+        erased_bytes += bdev->block_size;
+    }
+    return erased_bytes;
+}
+
+static ssize_t ch579_infoflash_bdev_erase(struct bdev *bdev, off_t offset, size_t len) {
+    ssize_t erased_bytes = 0;
+
+    len = bio_trim_range(bdev, offset, len);
+    if (len == 0)
+        return 0;
+    while (len >= bdev->block_size){
+        if (FlashBlockErase(offset + INFO_FLASH_BASE)) {
             erased_bytes = ERR_IO;
             break;
         }
@@ -206,14 +238,14 @@ void ch579_chipflash_init(void) {
 
     bio_register_device(&df_dev);
 
-    bio_initialize_bdev(&if_dev, "infoflash", 512, INFO_FLASH_SIZE / 512, 0, NULL,
+    bio_initialize_bdev(&if_dev, "infoflash", 512, INFO_FLASH_SIZE / 512, 0, if_geometry,
                         BIO_FLAGS_NONE);
 
-//    if_dev.erase_byte = 0xff;
+    if_dev.erase_byte = 0xff;
     if_dev.read = &ch579_infoflash_bdev_read;
     if_dev.read_block = &ch579_infoflash_bdev_read_block;
-//    if_dev.write_block = &ch579_infoflash_bdev_write_block;
-//    if_dev.erase = &ch579_infoflash_bdev_erase;
+    if_dev.write_block = &ch579_infoflash_bdev_write_block;
+    if_dev.erase = &ch579_infoflash_bdev_erase;
     if_dev.ioctl = &ch579_infoflash_bdev_ioctl;
 
     bio_register_device(&if_dev);
