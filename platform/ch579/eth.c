@@ -27,13 +27,14 @@ struct netif *ch579_netif;
 uint8_t __attribute__((aligned(4))) tx_dma_buf[1600], rx_dma_buf[1600];
 
 /* MAC address */
-uint8_t macaddr[6];
+uint8_t mac_address[6];
 
-static event_t rx_arrived_event = EVENT_INITIAL_VALUE(rx_arrived_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 static event_t led_blink_event = EVENT_INITIAL_VALUE(led_blink_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
 #define IFNAME1 'n'
+
+#define HOSTNAME "lwip"
 
 struct ethernetif {
     struct eth_addr *ethaddr;
@@ -144,7 +145,6 @@ low_level_output(struct netif *netif, struct pbuf *p) {
         /* Send the data from the pbuf to the interface, one pbuf at a
            time. The size of the data in each pbuf is kept in the ->len
            variable. */
-//  debug_dump_memory_bytes(q->payload, q->len);
         for (j = 0; j < q->len; j++)
             *(uint8_t *)(tx_dma_buf + i + j) = ((unsigned char *)q->payload)[j];
         i += q->len;
@@ -238,11 +238,8 @@ low_level_input(struct netif *netif) {
 static void
 ethernetif_input(struct netif *netif)
 {
-  struct ethernetif *ethernetif;
   struct eth_hdr *ethhdr;
   struct pbuf *p;
-
-  ethernetif = netif->state;
 
   /* move received packet into a new pbuf */
   p = low_level_input(netif);
@@ -302,7 +299,7 @@ ethernetif_init(struct netif *netif)
 
 #if LWIP_NETIF_HOSTNAME
   /* Initialize interface hostname */
-  netif->hostname = "lwip";
+  netif->hostname = HOSTNAME;
 #endif /* LWIP_NETIF_HOSTNAME */
 
   /*
@@ -352,16 +349,6 @@ status_t ethernet_init(void) {
     return NO_ERROR;
 }
 
-/*
-static int ch579_eth_rx_thread(void *arg) {
-    while (1) {
-        event_wait(&rx_arrived_event);
-        ethernetif_input(ch579_netif);
-    }
-    return 0;
-}
-*/
-
 static void ch579_eth_hwinit(uint16_t maxmfl, uint8_t macaddr[]) {
     /* Init Ethernet LEDs*/
     gpio_config(ETH_CONN_LED, GPIO_OUTPUT);
@@ -401,10 +388,10 @@ static void ch579_eth_hwinit(uint16_t maxmfl, uint8_t macaddr[]) {
 }
 
 void ch579_eth_init(void) {
-    thread_t *rx_thread, *led_blink_thread;
+    thread_t *led_blink_thread;
 
-    ch579_infoflash_read_macaddr(macaddr);
-    ch579_eth_hwinit(CH579_DEFAULT_MAXMFL, macaddr);
+    ch579_infoflash_read_macaddr(mac_address);
+    ch579_eth_hwinit(CH579_DEFAULT_MAXMFL, mac_address);
 
     led_blink_thread = thread_create("ch579_eth_led_blink", ch579_eth_led_blink_thread, NULL, DEFAULT_PRIORITY, DEFAULT_STACK_SIZE);
     thread_resume(led_blink_thread);
@@ -412,8 +399,6 @@ void ch579_eth_init(void) {
     ethernet_init();
 
     dhcp_start(ch579_netif);
-//    rx_thread = thread_create("ch579_eth_rx", ch579_eth_rx_thread, NULL, HIGH_PRIORITY, DEFAULT_STACK_SIZE);
-//    thread_resume(rx_thread);
 }
 
 void ETH_IRQHandler(void) {
@@ -425,8 +410,6 @@ void ETH_IRQHandler(void) {
         //Receive complete
         event_signal(&led_blink_event, false);
         ethernetif_input(ch579_netif);
-//        event_signal(&rx_arrived_event, true);
-//        resched = true;
         R8_ETH_EIR = RB_ETH_EIR_RXIF;
     }
     if (eir & RB_ETH_EIR_TXIF) {
