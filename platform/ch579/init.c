@@ -24,6 +24,11 @@ void platform_early_init(void) {
     gpio_config(GPIO(GPIO_PORT_A, 9), GPIO_OUTPUT);
     UART1_DefInit();
 
+    /* Avoid missing characters of first dprintf after software reset */
+    platform_dputc('\n');
+    platform_dputc('\n');
+    platform_dputc('\n');
+
     dprintf(SPEW, "Reboot reason: ");
     switch(R8_RESET_STATUS & RB_RESET_FLAG) {
         case RST_FLAG_SW:
