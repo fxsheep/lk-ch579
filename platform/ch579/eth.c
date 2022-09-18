@@ -31,6 +31,7 @@ uint8_t mac_address[6];
 
 static event_t rx_ready_event = EVENT_INITIAL_VALUE(rx_ready_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 static event_t led_blink_event = EVENT_INITIAL_VALUE(led_blink_event, false, EVENT_FLAG_AUTOUNSIGNAL);
+static event_t link_down_event = EVENT_INITIAL_VALUE(link_down_event, false, EVENT_FLAG_AUTOUNSIGNAL);
 
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
@@ -148,7 +149,7 @@ low_level_output(struct netif *netif, struct pbuf *p) {
         /* Send the data from the pbuf to the interface, one pbuf at a
            time. The size of the data in each pbuf is kept in the ->len
            variable. */
-        for (j = 0; j < q->len; j++)
+       for (j = 0; j < q->len; j++)
             *(uint8_t *)(tx_dma_buf + i + j) = ((unsigned char *)q->payload)[j];
         i += q->len;
     }
@@ -206,7 +207,7 @@ low_level_input(struct netif *netif) {
             /* Read enough bytes to fill this pbuf in the chain. The
              * available data in the pbuf is given by the q->len
              * variable. */
-            for (i=0; i < q->len; i++) {
+             for (i=0; i < q->len; i++) {
                 ((unsigned char *)q->payload)[i] = *(uint8_t *)(rx_dma_buf + pos);
                 pos++;
             }
@@ -346,6 +347,24 @@ static int ch579_eth_rx_thread(void *arg) {
     return 0;
 }
 
+static int ch579_eth_phy_polarity_change_thread(void *arg) {
+    int polarity = 0;
+    while(1) {
+        thread_sleep(500);
+        if ((ch579_eth_read_phy_reg(PHY_REG_STATUS) & PHY_REG_STATUS_CONNECTED) == 0) {
+            if(polarity & 1) {
+                writel(0x11e, 0x40009024);
+            } else {
+                writel(0x4011e, 0x40009024);
+            }
+            polarity++;
+        } else {
+            event_wait(&link_down_event);
+        }
+    }
+    return 0;
+}
+
 static void ch579_eth_hwinit(uint16_t maxmfl, uint8_t macaddr[]) {
     /* Init Ethernet LEDs*/
     gpio_config(ETH_CONN_LED, GPIO_OUTPUT);
@@ -385,7 +404,7 @@ static void ch579_eth_hwinit(uint16_t maxmfl, uint8_t macaddr[]) {
 }
 
 void ch579_eth_init(void) {
-    thread_t *led_blink_thread, *rx_thread;
+    thread_t *led_blink_thread, *rx_thread, *polarity_change_thread;
 
     ch579_infoflash_read_macaddr(mac_address);
     ch579_eth_hwinit(CH579_DEFAULT_MAXMFL, mac_address);
@@ -395,6 +414,9 @@ void ch579_eth_init(void) {
 
     rx_thread = thread_create("ch579_eth_rx", ch579_eth_rx_thread, NULL, HIGH_PRIORITY, DEFAULT_STACK_SIZE);
     thread_resume(rx_thread);
+
+    polarity_change_thread = thread_create("ch579_eth_phy_polarity_change", ch579_eth_phy_polarity_change_thread, NULL, DEFAULT_PRIORITY, DEFAULT_STACK_SIZE);
+    thread_resume(polarity_change_thread);
 
     ethernet_init();
 
@@ -431,6 +453,7 @@ void ETH_IRQHandler(void) {
             gpio_set(ETH_CONN_LED, 1);
             gpio_set(ETH_DATA_LED, 1);
             netif_set_link_down(ch579_netif);
+            event_signal(&link_down_event, false);
         }
         R8_ETH_EIR = RB_ETH_EIR_LINKIF;
     }
