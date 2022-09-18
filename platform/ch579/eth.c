@@ -149,8 +149,7 @@ low_level_output(struct netif *netif, struct pbuf *p) {
         /* Send the data from the pbuf to the interface, one pbuf at a
            time. The size of the data in each pbuf is kept in the ->len
            variable. */
-       for (j = 0; j < q->len; j++)
-            *(uint8_t *)(tx_dma_buf + i + j) = ((unsigned char *)q->payload)[j];
+        memcpy(tx_dma_buf + i, q->payload, q->len);
         i += q->len;
     }
 
@@ -207,10 +206,8 @@ low_level_input(struct netif *netif) {
             /* Read enough bytes to fill this pbuf in the chain. The
              * available data in the pbuf is given by the q->len
              * variable. */
-             for (i=0; i < q->len; i++) {
-                ((unsigned char *)q->payload)[i] = *(uint8_t *)(rx_dma_buf + pos);
-                pos++;
-            }
+            memcpy(q->payload, rx_dma_buf + pos, q->len);
+            pos += q->len;
         }
 
 #if ETH_PAD_SIZE
